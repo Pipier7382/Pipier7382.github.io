@@ -1,1 +1,384 @@
-# Pipier7382.github.io
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Relatório dos Corretores</title>
+<style>
+  :root{
+    --meia-noite: #060f09;
+    --preto: #030702;
+    --verde: #3a5a40;
+    --verde-2: #1b3022;
+    --verde-claro: #a3b18a;
+    --verde-claro-2: #588157;
+    --creme: #eef5e9;
+    --texto: #eef2e6;
+    --texto-fraco: #8f9c88;
+    --linha: #22331f;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 15% 0%, rgba(58,90,64,0.22), transparent 40%),
+      radial-gradient(circle at 100% 20%, rgba(163,177,138,0.12), transparent 45%),
+      linear-gradient(180deg, var(--preto), var(--meia-noite) 40%, var(--preto));
+    color: var(--texto);
+    font-family: 'Georgia', 'Iowan Old Style', serif;
+    min-height:100vh;
+    padding: 28px 16px 60px;
+  }
+  .marca{ display:flex; align-items:baseline; gap:12px; justify-content:center; margin-bottom:4px; }
+  .marca .chave{ font-size:20px; }
+  h1{
+    font-family:'Trebuchet MS','Helvetica Neue',sans-serif; font-weight:700;
+    letter-spacing:0.06em; text-transform:uppercase; font-size:20px; text-align:center; color:var(--creme);
+  }
+  .subtitulo{ text-align:center; color:var(--texto-fraco); font-size:12.5px; margin-bottom:8px; font-family:'Trebuchet MS',sans-serif; }
+  .aviso{
+    max-width:760px; margin:0 auto 22px; background:rgba(163,177,138,0.08); border:1px solid var(--linha);
+    border-radius:10px; padding:10px 14px; font-size:12.5px; color:var(--texto-fraco); text-align:center;
+    font-family:'Trebuchet MS',sans-serif; line-height:1.5;
+  }
+  .wrap{ max-width:900px; margin:0 auto; }
+
+  .abas{ display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin-bottom:20px; }
+  .aba-btn{
+    font-family:'Trebuchet MS',sans-serif; cursor:pointer; border:1px solid var(--linha); background:rgba(255,255,255,0.03);
+    color:var(--texto-fraco); border-radius:20px; padding:7px 14px; font-size:12.5px; font-weight:700; transition:.15s ease;
+  }
+  .aba-btn:hover{ color:var(--texto); border-color:var(--verde-claro); }
+  .aba-btn.ativa{ background:linear-gradient(135deg, var(--verde), var(--verde-claro-2)); color:white; border-color:transparent; }
+  .aba-btn.gerente{ border-color: var(--verde-claro); }
+
+  .painel{
+    background: linear-gradient(160deg, rgba(6,15,9,0.92), rgba(3,7,2,0.92));
+    border:1px solid var(--linha); border-radius:14px; padding:22px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.35);
+  }
+  .painel h2{
+    font-family:'Trebuchet MS',sans-serif; font-size:14px; text-transform:uppercase; letter-spacing:0.1em;
+    color:var(--verde-claro); margin-bottom:16px; display:flex; align-items:center; gap:8px;
+  }
+  .painel h2::before{ content:""; width:8px; height:8px; border-radius:50%; background:var(--verde-claro); box-shadow:0 0 8px var(--verde-claro); }
+
+  label{ font-family:'Trebuchet MS',sans-serif; font-size:11.5px; color:var(--texto-fraco); text-transform:uppercase; letter-spacing:0.05em; display:block; margin-bottom:4px; }
+  input[type=date], input[type=number]{
+    background:rgba(255,255,255,0.03); border:1px solid var(--linha); color:var(--texto);
+    border-radius:8px; padding:9px 10px; font-size:14px; font-family:inherit; width:100%;
+  }
+  input:focus{ outline:2px solid var(--verde-claro); outline-offset:1px; }
+
+  .campo-data{ max-width:220px; margin-bottom:18px; }
+  .grade-campos{ display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:12px; margin-bottom:16px; }
+
+  button{
+    font-family:'Trebuchet MS',sans-serif; cursor:pointer; border:none; border-radius:8px;
+    padding:10px 16px; font-size:13px; font-weight:700; transition:transform .12s ease, box-shadow .12s ease;
+  }
+  button:active{ transform:scale(0.96); }
+  .btn-principal{ background:linear-gradient(135deg, var(--verde), var(--verde-claro-2)); color:white; }
+  .btn-principal:hover{ box-shadow:0 0 16px rgba(163,177,138,0.5); }
+  .btn-secundario{ background:transparent; color:var(--texto-fraco); border:1px solid var(--linha); }
+  .btn-secundario:hover{ color:var(--texto); border-color:var(--verde-claro); }
+  .btn-mini{ padding:6px 10px; font-size:11.5px; }
+
+  table{ width:100%; border-collapse:collapse; font-size:12.5px; }
+  thead th{
+    font-family:'Trebuchet MS',sans-serif; text-transform:uppercase; letter-spacing:0.04em; font-size:10.5px;
+    color:var(--texto-fraco); text-align:left; padding:8px 8px; border-bottom:1px solid var(--linha);
+  }
+  tbody td{ padding:9px 8px; border-bottom:1px solid var(--linha); }
+  tbody tr:hover{ background:rgba(255,255,255,0.03); }
+  tbody tr.linha-total{ font-weight:700; color:var(--creme); }
+  tbody tr.linha-total td{ border-top:1px solid var(--verde-claro); border-bottom:none; }
+  .tabela-wrap{ overflow-x:auto; }
+  .col-num{ text-align:center; }
+  .col-acao{ text-align:right; }
+  .remover{ background:none; color:var(--texto-fraco); font-size:14px; padding:2px 6px; }
+  .remover:hover{ color:var(--verde-claro); }
+  .vazio{ color:var(--texto-fraco); font-size:13px; font-style:italic; padding:10px 2px; }
+
+  .toggle-modo{ display:flex; gap:8px; margin-bottom:16px; }
+  .toggle-modo button{ flex:1; }
+  .toggle-modo button.ativa{ background:linear-gradient(135deg, var(--verde), var(--verde-claro-2)); color:white; }
+  .toggle-modo button:not(.ativa){ background:transparent; color:var(--texto-fraco); border:1px solid var(--linha); }
+  .faixa-periodo{ font-family:'Trebuchet MS',sans-serif; font-size:12px; color:var(--texto-fraco); text-align:center; margin:-6px 0 16px; }
+  .carregando{ text-align:center; color:var(--texto-fraco); font-size:13px; padding:20px; font-family:'Trebuchet MS',sans-serif; }
+
+  ::-webkit-scrollbar{ height:6px; width:6px; }
+  ::-webkit-scrollbar-thumb{ background:var(--verde-2); border-radius:4px; }
+</style>
+</head>
+<body>
+
+  <div class="marca"><span class="chave">🐊</span><h1>Relatório dos Corretores</h1></div>
+  <p class="subtitulo">interações, negociações, agendamentos, visitas, propostas e vendas — por corretor, por dia</p>
+  <div class="aviso">
+    Este relatório é compartilhado: qualquer pessoa com este link pode ver e editar os dados.
+    Cada corretor deve preencher apenas na própria aba, com honestidade — não há login/senha.
+  </div>
+
+  <div class="wrap">
+    <div class="abas" id="abas"></div>
+    <div class="painel" id="conteudo">
+      <div class="carregando">Carregando relatório...</div>
+    </div>
+  </div>
+
+<script>
+const CORRETORES = ['Sérgio','Molina','Duda','Silva','Honório','Orlando','Londrina','Pascoal','Guerra','Cecília'];
+const CAMPOS = [
+  { id:'interacoes', label:'Interações' },
+  { id:'negociacoes', label:'Negociações' },
+  { id:'agendamentos', label:'Agendamentos' },
+  { id:'visitas', label:'Visitas' },
+  { id:'propostas', label:'Propostas' },
+  { id:'vendas', label:'Vendas' },
+];
+
+function slug(nome){
+  return nome.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+}
+function pad2(n){ return n < 10 ? '0'+n : ''+n; }
+function hojeChave(){
+  const h = new Date();
+  return `${h.getFullYear()}-${pad2(h.getMonth()+1)}-${pad2(h.getDate())}`;
+}
+function formatarDataBR(chave){
+  const [y,m,d] = chave.split('-');
+  return `${d}/${m}/${y}`;
+}
+function inicioDaSemana(chave){
+  const [y,m,d] = chave.split('-').map(Number);
+  const dt = new Date(y, m-1, d);
+  const diaSemana = dt.getDay();
+  const deslocamento = diaSemana === 0 ? 6 : diaSemana - 1;
+  dt.setDate(dt.getDate() - deslocamento);
+  return `${dt.getFullYear()}-${pad2(dt.getMonth()+1)}-${pad2(dt.getDate())}`;
+}
+function somaDias(chave, n){
+  const [y,m,d] = chave.split('-').map(Number);
+  const dt = new Date(y, m-1, d);
+  dt.setDate(dt.getDate() + n);
+  return `${dt.getFullYear()}-${pad2(dt.getMonth()+1)}-${pad2(dt.getDate())}`;
+}
+
+async function carregarShared(chave, padrao){
+  try{
+    const r = await window.storage.get(chave, true);
+    return r ? JSON.parse(r.value) : padrao;
+  }catch(e){ return padrao; }
+}
+async function salvarShared(chave, valor){
+  try{ await window.storage.set(chave, JSON.stringify(valor), true); }
+  catch(e){ console.error('Falha ao salvar', chave, e); }
+}
+
+let relatorios = {};
+
+async function carregarTudo(){
+  const entradas = await Promise.all(CORRETORES.map(async nome => {
+    const dados = await carregarShared('relatorio:' + slug(nome), {});
+    return [nome, dados];
+  }));
+  relatorios = Object.fromEntries(entradas);
+}
+
+let abaAtiva = CORRETORES[0];
+const abasEl = document.getElementById('abas');
+const conteudoEl = document.getElementById('conteudo');
+
+function renderAbas(){
+  abasEl.innerHTML = '';
+  CORRETORES.forEach(nome => {
+    const btn = document.createElement('button');
+    btn.className = 'aba-btn' + (abaAtiva === nome ? ' ativa' : '');
+    btn.textContent = nome;
+    btn.addEventListener('click', () => { abaAtiva = nome; renderAbas(); renderConteudo(); });
+    abasEl.appendChild(btn);
+  });
+  const btnGerente = document.createElement('button');
+  btnGerente.className = 'aba-btn gerente' + (abaAtiva === 'GERENTE' ? ' ativa' : '');
+  btnGerente.textContent = '📊 Gerente';
+  btnGerente.addEventListener('click', () => { abaAtiva = 'GERENTE'; renderAbas(); renderConteudo(); });
+  abasEl.appendChild(btnGerente);
+}
+
+function renderConteudo(){
+  if(abaAtiva === 'GERENTE'){
+    renderGerente();
+  } else {
+    renderCorretor(abaAtiva);
+  }
+}
+
+/* ---------- Aba de cada corretor ---------- */
+function renderCorretor(nome){
+  const dados = relatorios[nome] || {};
+  const dataPadrao = hojeChave();
+  const existenteHoje = dados[dataPadrao] || {};
+
+  const datasOrdenadas = Object.keys(dados).sort().reverse();
+  let linhasHtml = '';
+  if(datasOrdenadas.length === 0){
+    linhasHtml = `<tr><td colspan="${CAMPOS.length + 2}" class="vazio">Nenhum registro ainda.</td></tr>`;
+  } else {
+    linhasHtml = datasOrdenadas.map(data => {
+      const v = dados[data];
+      return `<tr>
+        <td>${formatarDataBR(data)}</td>
+        ${CAMPOS.map(c => `<td class="col-num">${v[c.id] || 0}</td>`).join('')}
+        <td class="col-acao"><button class="remover" data-data="${data}">✕</button></td>
+      </tr>`;
+    }).join('');
+  }
+
+  conteudoEl.innerHTML = `
+    <h2>${nome} — lançar relatório do dia</h2>
+    <div class="campo-data">
+      <label for="rc-data">Data</label>
+      <input type="date" id="rc-data" value="${dataPadrao}">
+    </div>
+    <div class="grade-campos">
+      ${CAMPOS.map(c => `
+        <div>
+          <label for="rc-${c.id}">${c.label}</label>
+          <input type="number" min="0" id="rc-${c.id}" value="${existenteHoje[c.id] || ''}" placeholder="0">
+        </div>
+      `).join('')}
+    </div>
+    <button class="btn-principal" id="rc-salvar">Salvar lançamento</button>
+
+    <h2 style="margin-top:28px;">Histórico de ${nome}</h2>
+    <div class="tabela-wrap">
+      <table>
+        <thead><tr>
+          <th>Data</th>
+          ${CAMPOS.map(c => `<th class="col-num">${c.label}</th>`).join('')}
+          <th></th>
+        </tr></thead>
+        <tbody>${linhasHtml}</tbody>
+      </table>
+    </div>
+  `;
+
+  const dataInput = document.getElementById('rc-data');
+  dataInput.addEventListener('change', () => {
+    const registro = (relatorios[nome] && relatorios[nome][dataInput.value]) || {};
+    CAMPOS.forEach(c => {
+      document.getElementById('rc-' + c.id).value = registro[c.id] || '';
+    });
+  });
+
+  document.getElementById('rc-salvar').addEventListener('click', async () => {
+    const data = dataInput.value;
+    if(!data) return;
+    const registro = {};
+    CAMPOS.forEach(c => {
+      const val = parseInt(document.getElementById('rc-' + c.id).value, 10);
+      registro[c.id] = isNaN(val) ? 0 : val;
+    });
+    if(!relatorios[nome]) relatorios[nome] = {};
+    relatorios[nome][data] = registro;
+    await salvarShared('relatorio:' + slug(nome), relatorios[nome]);
+    renderCorretor(nome);
+  });
+
+  conteudoEl.querySelectorAll('.remover').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const data = btn.dataset.data;
+      delete relatorios[nome][data];
+      await salvarShared('relatorio:' + slug(nome), relatorios[nome]);
+      renderCorretor(nome);
+    });
+  });
+}
+
+/* ---------- Aba do gerente ---------- */
+let modoGerente = 'dia';
+let dataGerente = hojeChave();
+
+function totaisVazios(){
+  const t = {};
+  CAMPOS.forEach(c => t[c.id] = 0);
+  return t;
+}
+
+function somarPeriodo(nome, datasNoPeriodo){
+  const dados = relatorios[nome] || {};
+  const totais = totaisVazios();
+  datasNoPeriodo.forEach(data => {
+    const v = dados[data];
+    if(!v) return;
+    CAMPOS.forEach(c => { totais[c.id] += (v[c.id] || 0); });
+  });
+  return totais;
+}
+
+function renderGerente(){
+  const modoDiario = modoGerente === 'dia';
+  let datasNoPeriodo = [];
+  let faixaTexto = '';
+
+  if(modoDiario){
+    datasNoPeriodo = [dataGerente];
+    faixaTexto = formatarDataBR(dataGerente);
+  } else {
+    const inicio = inicioDaSemana(dataGerente);
+    datasNoPeriodo = Array.from({length:7}, (_, i) => somaDias(inicio, i));
+    faixaTexto = `${formatarDataBR(datasNoPeriodo[0])} a ${formatarDataBR(datasNoPeriodo[6])}`;
+  }
+
+  const totalGeral = totaisVazios();
+  const linhas = CORRETORES.map(nome => {
+    const t = somarPeriodo(nome, datasNoPeriodo);
+    CAMPOS.forEach(c => { totalGeral[c.id] += t[c.id]; });
+    return `<tr>
+      <td>${nome}</td>
+      ${CAMPOS.map(c => `<td class="col-num">${t[c.id]}</td>`).join('')}
+    </tr>`;
+  }).join('');
+
+  const linhaTotal = `<tr class="linha-total">
+    <td>Total da equipe</td>
+    ${CAMPOS.map(c => `<td class="col-num">${totalGeral[c.id]}</td>`).join('')}
+  </tr>`;
+
+  conteudoEl.innerHTML = `
+    <h2>Visão do gerente</h2>
+    <div class="toggle-modo">
+      <button id="ger-btn-dia" class="${modoDiario ? 'ativa' : ''}">Diário</button>
+      <button id="ger-btn-semana" class="${!modoDiario ? 'ativa' : ''}">Semanal</button>
+    </div>
+    <div class="campo-data">
+      <label for="ger-data">${modoDiario ? 'Data' : 'Qualquer dia da semana desejada'}</label>
+      <input type="date" id="ger-data" value="${dataGerente}">
+    </div>
+    <div class="faixa-periodo">Período: ${faixaTexto}</div>
+    <div class="tabela-wrap">
+      <table>
+        <thead><tr>
+          <th>Corretor</th>
+          ${CAMPOS.map(c => `<th class="col-num">${c.label}</th>`).join('')}
+        </tr></thead>
+        <tbody>${linhas}${linhaTotal}</tbody>
+      </table>
+    </div>
+  `;
+
+  document.getElementById('ger-btn-dia').addEventListener('click', () => { modoGerente = 'dia'; renderGerente(); });
+  document.getElementById('ger-btn-semana').addEventListener('click', () => { modoGerente = 'semana'; renderGerente(); });
+  document.getElementById('ger-data').addEventListener('change', (e) => { dataGerente = e.target.value; renderGerente(); });
+}
+
+/* ---------- Boot ---------- */
+async function iniciar(){
+  await carregarTudo();
+  renderAbas();
+  renderConteudo();
+}
+iniciar();
+</script>
+</body>
+</html>
