@@ -71,6 +71,26 @@
 
   .campo-data{ max-width:220px; margin-bottom:18px; }
   .grade-campos{ display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:12px; margin-bottom:16px; }
+  .bloco-periodo{
+    border:1px solid var(--linha); border-radius:12px; padding:16px; margin-bottom:16px;
+    background:rgba(255,255,255,0.02);
+  }
+  .bloco-periodo h3{
+    font-family:'Trebuchet MS',sans-serif; font-size:12.5px; text-transform:uppercase; letter-spacing:0.06em;
+    color:var(--verde-claro); margin-bottom:12px;
+  }
+  .bloco-total-dia{
+    border:1px solid var(--verde-claro); border-radius:12px; padding:16px; margin-bottom:18px;
+    background:rgba(163,177,138,0.06);
+  }
+  .bloco-total-dia h3{
+    font-family:'Trebuchet MS',sans-serif; font-size:12.5px; text-transform:uppercase; letter-spacing:0.06em;
+    color:var(--creme); margin-bottom:12px;
+  }
+  .total-dia-valor{
+    font-family:'Trebuchet MS',sans-serif; font-weight:700; font-size:20px; color:var(--creme);
+    background:rgba(255,255,255,0.03); border:1px solid var(--linha); border-radius:8px; padding:9px 10px; text-align:center;
+  }
 
   button{
     font-family:'Trebuchet MS',sans-serif; cursor:pointer; border:none; border-radius:8px;
@@ -136,6 +156,30 @@ const CAMPOS = [
   { id:'propostas', label:'Propostas' },
   { id:'vendas', label:'Vendas' },
 ];
+const PERIODOS = ['12:00','15:00','18:00','21:00'];
+function periodoId(p){ return p.replace(':', ''); }
+
+function totaisVazios(){
+  const t = {};
+  CAMPOS.forEach(c => t[c.id] = 0);
+  return t;
+}
+function totalDoDia(dados, data){
+  const registroDia = (dados && dados[data]) || {};
+  const totais = totaisVazios();
+  const temPeriodos = PERIODOS.some(p => registroDia[p]);
+  if(!temPeriodos){
+    // compatibilidade com lançamentos feitos antes de existir divisão por período
+    CAMPOS.forEach(c => { totais[c.id] += (registroDia[c.id] || 0); });
+    return totais;
+  }
+  PERIODOS.forEach(p => {
+    const v = registroDia[p];
+    if(!v) return;
+    CAMPOS.forEach(c => { totais[c.id] += (v[c.id] || 0); });
+  });
+  return totais;
+}
 
 function slug(nome){
   return nome.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
@@ -217,7 +261,7 @@ function renderConteudo(){
 function renderCorretor(nome){
   const dados = relatorios[nome] || {};
   const dataPadrao = hojeChave();
-  const existenteHoje = dados[dataPadrao] || {};
+  const registroDia = dados[dataPadrao] || {};
 
   const datasOrdenadas = Object.keys(dados).sort().reverse();
   let linhasHtml = '';
@@ -225,14 +269,31 @@ function renderCorretor(nome){
     linhasHtml = `<tr><td colspan="${CAMPOS.length + 2}" class="vazio">Nenhum registro ainda.</td></tr>`;
   } else {
     linhasHtml = datasOrdenadas.map(data => {
-      const v = dados[data];
+      const t = totalDoDia(dados, data);
       return `<tr>
         <td>${formatarDataBR(data)}</td>
-        ${CAMPOS.map(c => `<td class="col-num">${v[c.id] || 0}</td>`).join('')}
+        ${CAMPOS.map(c => `<td class="col-num">${t[c.id]}</td>`).join('')}
         <td class="col-acao"><button class="remover" data-data="${data}">✕</button></td>
       </tr>`;
     }).join('');
   }
+
+  const blocosPeriodo = PERIODOS.map(p => {
+    const existente = registroDia[p] || {};
+    return `
+      <div class="bloco-periodo">
+        <h3>Relatório das ${p}</h3>
+        <div class="grade-campos">
+          ${CAMPOS.map(c => `
+            <div>
+              <label for="rc-${periodoId(p)}-${c.id}">${c.label}</label>
+              <input type="number" min="0" class="rc-campo" data-periodo="${p}" data-campo="${c.id}" id="rc-${periodoId(p)}-${c.id}" value="${existente[c.id] || ''}" placeholder="0">
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
 
   conteudoEl.innerHTML = `
     <h2>${nome} — lançar relatório do dia</h2>
@@ -240,17 +301,21 @@ function renderCorretor(nome){
       <label for="rc-data">Data</label>
       <input type="date" id="rc-data" value="${dataPadrao}">
     </div>
-    <div class="grade-campos">
-      ${CAMPOS.map(c => `
-        <div>
-          <label for="rc-${c.id}">${c.label}</label>
-          <input type="number" min="0" id="rc-${c.id}" value="${existenteHoje[c.id] || ''}" placeholder="0">
-        </div>
-      `).join('')}
+    ${blocosPeriodo}
+    <div class="bloco-total-dia">
+      <h3>Total do dia</h3>
+      <div class="grade-campos">
+        ${CAMPOS.map(c => `
+          <div>
+            <label>${c.label}</label>
+            <div class="total-dia-valor" id="rc-total-${c.id}">0</div>
+          </div>
+        `).join('')}
+      </div>
     </div>
-    <button class="btn-principal" id="rc-salvar">Salvar lançamento</button>
+    <button class="btn-principal" id="rc-salvar">Salvar lançamento do dia</button>
 
-    <h2 style="margin-top:28px;">Histórico de ${nome}</h2>
+    <h2 style="margin-top:28px;">Histórico de ${nome} <span style="color:var(--texto-fraco); font-weight:400; text-transform:none; letter-spacing:0;">(soma dos 4 períodos)</span></h2>
     <div class="tabela-wrap">
       <table>
         <thead><tr>
@@ -263,21 +328,39 @@ function renderCorretor(nome){
     </div>
   `;
 
+  function atualizarTotalDia(){
+    const totais = totaisVazios();
+    conteudoEl.querySelectorAll('.rc-campo').forEach(input => {
+      const val = parseInt(input.value, 10);
+      if(!isNaN(val)) totais[input.dataset.campo] += val;
+    });
+    CAMPOS.forEach(c => {
+      document.getElementById('rc-total-' + c.id).textContent = totais[c.id];
+    });
+  }
+  atualizarTotalDia();
+  conteudoEl.querySelectorAll('.rc-campo').forEach(input => {
+    input.addEventListener('input', atualizarTotalDia);
+  });
+
   const dataInput = document.getElementById('rc-data');
   dataInput.addEventListener('change', () => {
     const registro = (relatorios[nome] && relatorios[nome][dataInput.value]) || {};
-    CAMPOS.forEach(c => {
-      document.getElementById('rc-' + c.id).value = registro[c.id] || '';
+    conteudoEl.querySelectorAll('.rc-campo').forEach(input => {
+      const v = registro[input.dataset.periodo] || {};
+      input.value = v[input.dataset.campo] || '';
     });
+    atualizarTotalDia();
   });
 
   document.getElementById('rc-salvar').addEventListener('click', async () => {
     const data = dataInput.value;
     if(!data) return;
     const registro = {};
-    CAMPOS.forEach(c => {
-      const val = parseInt(document.getElementById('rc-' + c.id).value, 10);
-      registro[c.id] = isNaN(val) ? 0 : val;
+    PERIODOS.forEach(p => { registro[p] = {}; });
+    conteudoEl.querySelectorAll('.rc-campo').forEach(input => {
+      const val = parseInt(input.value, 10);
+      registro[input.dataset.periodo][input.dataset.campo] = isNaN(val) ? 0 : val;
     });
     if(!relatorios[nome]) relatorios[nome] = {};
     relatorios[nome][data] = registro;
@@ -299,19 +382,12 @@ function renderCorretor(nome){
 let modoGerente = 'dia';
 let dataGerente = hojeChave();
 
-function totaisVazios(){
-  const t = {};
-  CAMPOS.forEach(c => t[c.id] = 0);
-  return t;
-}
-
-function somarPeriodo(nome, datasNoPeriodo){
+function somarDatas(nome, datasNoPeriodo){
   const dados = relatorios[nome] || {};
   const totais = totaisVazios();
   datasNoPeriodo.forEach(data => {
-    const v = dados[data];
-    if(!v) return;
-    CAMPOS.forEach(c => { totais[c.id] += (v[c.id] || 0); });
+    const t = totalDoDia(dados, data);
+    CAMPOS.forEach(c => { totais[c.id] += t[c.id]; });
   });
   return totais;
 }
@@ -332,7 +408,7 @@ function renderGerente(){
 
   const totalGeral = totaisVazios();
   const linhas = CORRETORES.map(nome => {
-    const t = somarPeriodo(nome, datasNoPeriodo);
+    const t = somarDatas(nome, datasNoPeriodo);
     CAMPOS.forEach(c => { totalGeral[c.id] += t[c.id]; });
     return `<tr>
       <td>${nome}</td>
